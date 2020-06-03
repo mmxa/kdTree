@@ -21,6 +21,11 @@ struct kdTreeNode{
         right = right_node;
         parent = root;
     }
+    kdTreeNode(const vector<T>& data):data(data){
+        left = NULL;
+        right = NULL;
+        parent = NULL;
+    }
     kdTreeNode<T>* left;
     kdTreeNode<T>* right;
     kdTreeNode<T>* parent;
@@ -35,12 +40,38 @@ struct kdTreeNode{
 template<typename T>
 class kdTree{
 public:
-    kdTree(vector<vector<T>> arr){
-        initialize_kdTree(arr);
+    kdTree(const vector<vector<T>>& arr){
+        data_base = arr;
+        //initialize_kdTree(arr);
+        if (data_base.empty()){
+            root = NULL;
+            return;
+        }
+        k = data_base[0].size(); //get dimension of database
+        int right = data_base.size();
+        root = split_arr(0, right, -1, NULL);
     }
+
     ~kdTree() {
         visit = [](kdTreeNode<T>* node){delete node;};
         postOrder(root);
+    }
+
+    kdTreeNode<T>* split_arr(int left, int right, int dim, kdTreeNode<T>* parent) {
+        if (left >= right) {
+            return NULL;
+        }
+        int cur_dim  = (dim%k) + 1;       // choose dimension one by one
+        auto fun = [cur_dim](vector<T> a, vector<T> b){return a[cur_dim]<b[cur_dim];};
+        sort(data_base.begin()+left, data_base.begin()+right, fun);
+        int mid = (left+right) / 2;
+        //vector<T> cur_data = data_base[mid];
+        kdTreeNode<T>* cur_node = new kdTreeNode<T>(data_base[mid]);
+        cur_node->split = cur_dim;
+        cur_node->parent = parent;
+        cur_node->left = split_arr(left, mid, cur_dim, cur_node);
+        cur_node->right = split_arr(mid+1, right, cur_dim, cur_node);
+        return cur_node;
     }
 
     void split_arr(vector<vector<T>> arr, kdTreeNode<T>* parent) {
@@ -106,15 +137,15 @@ public:
             return;
         }
         visit(node);
-        inOrder(node->left);
-        inOrder(node->right);
+        preOrder(node->left);
+        preOrder(node->right);
     }
     void postOrder(kdTreeNode<T>* node) {
         if (node == NULL){
             return;
         }
-        inOrder(node->left);
-        inOrder(node->right);
+        postOrder(node->left);
+        postOrder(node->right);
         visit(node);
     }
     void inOrder_visit(void(*func_pointer)(kdTreeNode<T>*)) {
@@ -127,6 +158,7 @@ public:
     }
 
 private:
+    vector<vector<T>> data_base;
     void (*visit)(kdTreeNode<T>*);
     kdTreeNode<T>* root;
     int k;
