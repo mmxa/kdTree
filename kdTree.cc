@@ -26,6 +26,21 @@ struct kdTreeNode{
         right = NULL;
         parent = NULL;
     }
+    bool is_left(){
+        return data == this->parent->left->data;
+    }
+    bool is_right(){
+        return data == this->parent->right->data;
+    }
+
+    kdTreeNode<T>* another_child(){
+        if (is_left) {
+            return parent->right;
+        }
+        else {
+            return parent->left;
+        }
+    }
     kdTreeNode<T>* left;
     kdTreeNode<T>* right;
     kdTreeNode<T>* parent;
@@ -122,6 +137,55 @@ public:
         k = arr[0].size();  //get k dimension
         root = new kdTreeNode<T>();
         split_arr(arr, root);
+    }
+
+    vector<T> find_nearest(const vector<T>& targ){
+        vector<T> res;
+        recursion_search(root, res);
+    }
+
+    void recursion_search(kdTreeNode<T>* node, const vector<T>& targ, vector<T>& res, T& minimum){
+        int dim = node->split;
+        if((node->left!=NULL) && (node->data[dim] <= targ[dim])) {
+            recursion_search(node->left, targ, res);
+        }
+        else if((node->right!=NULL)&&(node->data[dim]> targ[dim])) {
+            recursion_search(node->right, targ, res);
+        }
+        else{
+            res = node->data;       // set leaf node as nearest data 
+            traceback_search(node, targ, res);
+        }
+    }
+
+    void traceback_search(kdTreeNode<T>* node, const vector<T>& targ, vector<T>& res, T& minimum) {
+        if(node == root) {
+            // reach root node
+            T dis = calc_dis(node->data, targ);
+            if (dis < minumum) {
+                res = node->data;
+                minimum = dis;
+                return;
+            }
+        }
+        float dis = calc_dis(node->data, targ);
+            if (disT < minumum) {
+                res = node->data;
+                minimum = dis;
+                // check another child node 
+
+            }
+            else {
+                traceback_search(node->parent, targ, res, minimum);
+            }
+
+    }
+    float calc_dis(const vector<T>& data, const vector<T>& targ) {
+        float res = 0;
+        for(int i=0; i<targ.size(); i++){
+            res += (data[i]-targ[i])*(data[i]-targ[i]);
+        }
+        return res;
     }
 
     void inOrder(kdTreeNode<T>* node) {
