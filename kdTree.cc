@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 using namespace std;
 
 
@@ -34,7 +35,7 @@ struct kdTreeNode{
     }
 
     kdTreeNode<T>* another_child(){
-        if (is_left) {
+        if (is_left()) {
             return parent->right;
         }
         else {
@@ -93,17 +94,17 @@ public:
         if(arr.size() == 0){
             return;
         }
-        float nums = arr.size();
+        double nums = arr.size();
         int max_split = 0;
-        float max_square_var = 0;
+        double max_square_var = 0;
         for(int i=0; i < k; i++) {
-            float mean_val = 0;
-            float square_val = 0;
+            double mean_val = 0;
+            double square_val = 0;
             for(int j=0; j<arr.size(); j++){
                 mean_val += arr[j][k];
                 square_val += arr[j][k]*arr[j][k];
             }
-            float temp_square_var = square_val/nums - mean_val*mean_val/nums/nums;
+            double temp_square_var = square_val/nums - mean_val*mean_val/nums/nums;
             if (temp_square_var > max_square_var){
                 max_split = i;
                 max_square_var = temp_square_var;
@@ -141,51 +142,64 @@ public:
 
     vector<T> find_nearest(const vector<T>& targ){
         vector<T> res;
-        recursion_search(root, res);
+        double minimum = 99999999;
+        recursion_search(root, targ, res, minimum);
+        for(int i=0; i<res.size(); i++){
+            cout << "res : " << res[i] << "  ";
+        }
+        cout << endl;
+        return res;
     }
 
-    void recursion_search(kdTreeNode<T>* node, const vector<T>& targ, vector<T>& res, T& minimum){
+    void recursion_search(kdTreeNode<T>* node, const vector<T>& targ, vector<T>& res, double& minimum){
         int dim = node->split;
         if((node->left!=NULL) && (node->data[dim] <= targ[dim])) {
-            recursion_search(node->left, targ, res);
+            recursion_search(node->left, targ, res, minimum);
         }
         else if((node->right!=NULL)&&(node->data[dim]> targ[dim])) {
-            recursion_search(node->right, targ, res);
+            recursion_search(node->right, targ, res, minimum);
         }
-        else{
-            res = node->data;       // set leaf node as nearest data 
-            traceback_search(node, targ, res);
+        else {
+            double cur_dis = calc_dis(node->data, targ);
+            if(cur_dis < minimum){
+                minimum = cur_dis;
+                res = node->data;       // set leaf node as nearest data 
+            }
+            traceback_search(node, targ, res, minimum);
         }
     }
 
-    void traceback_search(kdTreeNode<T>* node, const vector<T>& targ, vector<T>& res, T& minimum) {
+    void traceback_search(kdTreeNode<T>* node, const vector<T>& targ, vector<T>& res, double& minimum) {
         if(node == root) {
             // reach root node
-            T dis = calc_dis(node->data, targ);
-            if (dis < minumum) {
+            double dis = calc_dis(node->data, targ);
+            if (dis < minimum) {
                 res = node->data;
                 minimum = dis;
                 return;
             }
+            return;
         }
-        float dis = calc_dis(node->data, targ);
-            if (disT < minumum) {
-                res = node->data;
-                minimum = dis;
-                // check another child node 
-
-            }
-            else {
-                traceback_search(node->parent, targ, res, minimum);
-            }
-
+        double dis = calc_dis(node->data, targ);
+        if (dis < minimum) {
+            res = node->data;
+            minimum = dis;
+        }
+        //find if brother potionally get closer to target
+        double potional_dis = min(abs(targ[node->parent->split] - node->parent->data[node->parent->split]), \
+                            abs(targ[node->split] - node->data[node->split]));
+        if (potional_dis < minimum){
+            recursion_search(node->another_child(), targ, res, minimum);
+        }
+        traceback_search(node->parent, targ, res, minimum);
     }
-    float calc_dis(const vector<T>& data, const vector<T>& targ) {
-        float res = 0;
+
+    double calc_dis(const vector<T>& data, const vector<T>& targ) {
+        double res = 0;
         for(int i=0; i<targ.size(); i++){
             res += (data[i]-targ[i])*(data[i]-targ[i]);
         }
-        return res;
+        return sqrt(res);
     }
 
     void inOrder(kdTreeNode<T>* node) {
@@ -257,5 +271,8 @@ int main(int argc, char** argv) {
     tree->inOrder_visit(print_element<int>);
     cout << "-----"<<endl;
     tree->preOrder_visit(print_element<int>);
+    cout << "-----"<<endl;
+    vector<int> targ{5,8};
+    tree->find_nearest(targ);
     delete tree;
 }
