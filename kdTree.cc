@@ -1,3 +1,9 @@
+/*
+kdTree for nearest search
+author:mengxz 
+date:2020-6-5
+reference:统计学习方法（第二版）-李航
+*/
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -47,7 +53,7 @@ struct kdTreeNode{
     kdTreeNode<T>* parent;
     int split;
     vector<T> data;
-    vector<T> range;
+    //vector<T> range;
     ~kdTreeNode(){
         cout << "node destory"<<endl;
     }
@@ -258,7 +264,7 @@ int main(int argc, char** argv) {
     nums.push_back(vector<int>{4,7,1});
     nums.push_back(vector<int>{7,2,9});
     nums.push_back(vector<int>{9,6,0});
-    nums.push_back(vector<int>{8,1,3});
+    nums.push_back(vector<int>{11,7,3});
     //nums.push_back(vector<int>{2,3});
     
     kdTree<int>* tree = new kdTree<int>(nums);
@@ -266,7 +272,7 @@ int main(int argc, char** argv) {
     cout << "-----"<<endl;
     tree->preOrder_visit(print_element<int>);
     cout << "-----"<<endl;
-    vector<int> targ{1,8,2};
+    vector<int> targ{10,8,2};
     tree->find_nearest(targ);
     delete tree;
 }
