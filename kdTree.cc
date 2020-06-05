@@ -153,13 +153,14 @@ public:
 
     void recursion_search(kdTreeNode<T>* node, const vector<T>& targ, vector<T>& res, double& minimum){
         int dim = node->split;
-        if((node->left!=NULL) && (node->data[dim] <= targ[dim])) {
+        if((node->left!=NULL) && (node->data[dim] >= targ[dim])) {
             recursion_search(node->left, targ, res, minimum);
         }
-        else if((node->right!=NULL)&&(node->data[dim]> targ[dim])) {
+        else if((node->right!=NULL)&&(node->data[dim] < targ[dim])) {
             recursion_search(node->right, targ, res, minimum);
         }
         else {
+            // reach a leaf node
             double cur_dis = calc_dis(node->data, targ);
             if(cur_dis < minimum){
                 minimum = cur_dis;
@@ -186,10 +187,10 @@ public:
             minimum = dis;
         }
         //find if brother potionally get closer to target
-        double potional_dis = min(abs(targ[node->parent->split] - node->parent->data[node->parent->split]), \
-                            abs(targ[node->split] - node->data[node->split]));
-        if (potional_dis < minimum){
+        double potional_dis = abs(targ[node->parent->split] - node->parent->data[node->parent->split]);
+        if (potional_dis < minimum && node->another_child()!=NULL){
             recursion_search(node->another_child(), targ, res, minimum);
+            return;
         }
         traceback_search(node->parent, targ, res, minimum);
     }
@@ -252,19 +253,12 @@ void print_element(kdTreeNode<T>* elem) {
 
 int main(int argc, char** argv) {
     vector<vector<int>> nums;
-    // for(int i=0; i<10; i++){
-    //     vector<int> temp;
-    //     for(int j=0; j<2; j++) {
-    //         temp.push_back(i + j);
-    //     }
-    //     nums.push_back(temp);
-    // }
-    nums.push_back(vector<int>{2,3});
-    nums.push_back(vector<int>{5,4});
-    nums.push_back(vector<int>{4,7});
-    nums.push_back(vector<int>{7,2});
-    nums.push_back(vector<int>{9,6});
-    nums.push_back(vector<int>{8,1});
+    nums.push_back(vector<int>{2,3,4});
+    nums.push_back(vector<int>{5,4,9});
+    nums.push_back(vector<int>{4,7,1});
+    nums.push_back(vector<int>{7,2,9});
+    nums.push_back(vector<int>{9,6,0});
+    nums.push_back(vector<int>{8,1,3});
     //nums.push_back(vector<int>{2,3});
     
     kdTree<int>* tree = new kdTree<int>(nums);
@@ -272,7 +266,7 @@ int main(int argc, char** argv) {
     cout << "-----"<<endl;
     tree->preOrder_visit(print_element<int>);
     cout << "-----"<<endl;
-    vector<int> targ{5,8};
+    vector<int> targ{1,8,2};
     tree->find_nearest(targ);
     delete tree;
 }
